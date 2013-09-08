@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -40,6 +41,7 @@ typedef struct process {
 typedef struct job {
     struct job *next;
     int id;                /* job id */
+    int bg_id;             /* only use for background jobs */
     char* command;         /* job command */
     char* cmds;            /* store cmds for process */
     int started;           /* TRUE if the job is started */
@@ -129,20 +131,20 @@ process* add_process(process *proc_head, char *cmd) {
         new_proc->std_in = STDIN_FILENO;
     }
     if (new_proc->std_in < 0) {
-        perror("can't access");
+        fprintf(stderr, "can't access \'%s\': %s\n", file_in, strerror(errno));
     }
 
     /* set std out */
     if (file_out != NULL) {
         if (append)
-            new_proc->std_out = open(file_out, O_RDWR | O_CREAT | O_APPEND, 0664);
+            new_proc->std_out = open(file_out, O_WRONLY | O_CREAT | O_APPEND, S_IREAD|S_IWRITE);
         else
-            new_proc->std_out = open(file_out, O_RDWR | O_CREAT, 0664);
+            new_proc->std_out = open(file_out, O_WRONLY | O_CREAT, S_IREAD|S_IWRITE);
     } else {
         new_proc->std_out = STDOUT_FILENO;
     }
     if (new_proc->std_out < 0) {
-        perror("can't access");
+        fprintf(stderr, "can't access \'%s\': %s\n", file_out, strerror(errno));
     }
 
 
@@ -216,6 +218,14 @@ void add_new_job(char *command, int foreground) {
 
 
 void free_job(job *j) {
+    process *p, *next;
+    p = j->proc_head;
+    while(p) {
+        next = p->next;
+        free(p);
+        p = next;
+    }
+
     free(j->command);
     free(j->cmds);
     free(j);
@@ -239,6 +249,7 @@ void remove_completed_jobs() {
     /* handle the fisrt job node */ 
     while (job_head) {
         if (is_job_completed(job_head)) {
+            printf("[%d]  done   %s\n", job_head->id, job_head->command);
             next = job_head->next;
             free_job(job_head);
             job_head = next;
@@ -253,9 +264,10 @@ void remove_completed_jobs() {
     j = job_head;
     while (j->next) {
         if (is_job_completed(j->next)) {
+            printf("[%d]  done   %s\n", j->next->id, j->next->command);
             next = j->next;
             j->next = next->next;
-            free(next);
+            free_job(next);
         } else 
             j = j->next;
     }
@@ -274,13 +286,12 @@ void free_job_list() {
 
 
 void set_proc_done(pid_t pid, int status) {
+    job *j;
+    process *p;
 
 #if DEBUG
     printf("[debug] process[%d] done: %d\n", pid, status);
 #endif
-
-    job *j;
-    process *p;
 
     j = job_head;
     while (j) {
@@ -309,16 +320,46 @@ void update_job_status() {
     }
 }
 
+void remove_job(job *j) {
+    job *cur;
+    
+    /* handle the fisrt job node */ 
+    if (job_head->id == j->id) {
+        job_head = j->next;
+        free_job(j);
+        return;
+    }
+
+    /* handle job nodes except the first node */
+    cur = job_head;
+    while (cur->next) {
+        if (cur->next->id = j->id) {
+#if DEBUG            
+            printf("[debug] remove job[%d] %s\n", j->id, j->command);
+#endif
+            cur->next = j->next;
+            free_job(j);
+            break;
+        } else 
+            cur = cur->next;
+    }
+}
+
 void wait_for_job(job *j) {
     do {
         update_job_status();
     } while(!is_job_completed(j));
+    remove_job(j);
+    print_job_list();
 }
 
 
 void launch_process(process *p, int file_in, int file_out) {
     /* set std in */
-    if (p->std_in != STDIN_FILENO) {
+    if (p->std_in == -1) {
+        /* write stdin to avoid block if can't open file*/
+        fprintf(STDIN_FILENO, "\n");  
+    } else if (p->std_in != STDIN_FILENO) {
         dup2(p->std_in, STDIN_FILENO);
         close(p->std_in);
     } else if (file_in != STDIN_FILENO) {
@@ -327,7 +368,12 @@ void launch_process(process *p, int file_in, int file_out) {
     }
 
     /* set std out */
-    if (p->std_out != STDOUT_FILENO) {
+    if (p->std_out == -1) {
+        /* redirect stdout to null */
+        int dev_null = open("/dev/null", O_WRONLY);
+        dup2(dev_null, STDOUT_FILENO);
+        close(dev_null);
+    } else if (p->std_out != STDOUT_FILENO) {
         dup2(p->std_out, STDOUT_FILENO);
         close(p->std_out);
     } else if (file_out != STDOUT_FILENO) {
@@ -336,7 +382,7 @@ void launch_process(process *p, int file_in, int file_out) {
     }
 
     if (execvp(p->argv[0], p->argv) < 0) {
-        perror("failed to exec");
+        fprintf(stderr, "exec \'%s\': %s\n", p->argv[0], strerror(errno));
         exit(1);
     }
 }
@@ -399,23 +445,26 @@ void launch_job(job *j) {
 
     
 void run_jobs() {
-    job *j;
+    job *j, *next;
     j = job_head;
     while(j) {
+        /* keep the next job first, because j can be removed after launched */
+        next = j->next;
         if (!j->started)
             launch_job(j);       
-        j = j->next;
+        j = next;
     }
 }
 
+int are_all_jobs_done() {
+    if (job_head == NULL)
+        return TRUE;
+    else
+        return FALSE;
+}
 
-
-int main() {
-
-    add_new_job("ls | sort >> 1123", TRUE);
-    add_new_job("ls | sleep 1", TRUE);
-
-    printf("=========== testing ===================\n");
+void print_job_list() {
+    printf("==============   job list   ===================\n");
     job *j;
     process *p;
     for(j = job_head; j; j = j->next) {
@@ -425,9 +474,29 @@ int main() {
         }
         printf("---\n"); 
     }
+    printf("==============  job list end ===================\n");
+}
+
+
+int main() {
+
+    add_new_job("ls | sort >> 1123", TRUE);
+    add_new_job("ls | sleep 3", FALSE);
+    add_new_job("cat < adsasdf | sort", TRUE);
+
 
     run_jobs();
-    free_job_list();
+
+    /* wait for background job */
+    while(TRUE) {
+
+        if (are_all_jobs_done()) {
+            break;   
+        }
+        update_job_status(); 
+        remove_completed_jobs();   
+    }        
+    free_job_list(); 
 }
 
 
