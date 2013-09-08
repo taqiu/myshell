@@ -1,4 +1,19 @@
 P536-myshell
 ============
 
-P536 simple shell
+The first lab assignment is to write your own shell in C (or C++). 
+The program you will write has these requirements. 
+
+• It will be started with the command myshell [ prompt ]. If the 
+optional prompt is not specified, the prompt will be ”myshell: ". 
+
+• It will read in the line of commands that will consist of 
+executables, arguments and the tokens “<”, “>”, “>>”, “&”, “;”
+and “|”
+
+• You will then create all of the necessary processes with the 
+proper redirection of input and output. 
+
+• The shell should exit when the user types CTRL-D or exit
+
+• Implement “cd” as a shell builtin
