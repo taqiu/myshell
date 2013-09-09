@@ -1,6 +1,24 @@
 P536-myshell
 ============
 
+Simple shell for P536 Operating System
+All below requirements are completed. 
+
+'make'        : compile source codes
+'make clean'  : remove all object files
+'make remove' : remove executable and object files
+
+
+============
+Directories:
+- src: source code
+- obj: object files
+- bin: executables
+
+
+============
+Project Requirements:
+
 The first lab assignment is to write your own shell in C (or C++). 
 The program you will write has these requirements. 
 

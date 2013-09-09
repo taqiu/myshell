@@ -1,3 +1,14 @@
+##############################
+# makefile for 'myshell'
+# author: Tanghong Qiu
+# e-mail: taqiu@indiana.edu
+# 
+# ###########################
+# Directories
+# src : source code
+# obj : object files
+# bin : executable
+
 # project name
 TARGET = myshell
 
