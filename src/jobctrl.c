@@ -360,8 +360,10 @@ void run_jobs() {
     while(j) {
         /* keep the next job first, because j can be removed after launched */
         next = j->next;
-        if (!j->started)
-            launch_job(j);       
+        if (!j->started) {
+            launch_job(j);
+            j->started = TRUE;
+        }       
         j = next;
     }
 }
