@@ -1,7 +1,27 @@
 /*
  * P536-myshell
+ * Author: Tanghong Qiu
  * File: jobctrl.c 
  * job control routines
+ *
+ * After several days research on bash, I figure out a data structure 
+ * for my shell job control. To handle foreground (command end with ;) 
+ * and background (command end with &) jobs, a job linked list is built
+ * to store the all jobs by parsing user input. Each job node has a pipeline
+ * of processes. The bash will create two processes for this command  
+ * 'sleep 10 | ls', because you will see the result of  'ls' first. 
+ *
+ * After generating the job list, the main process will run the job in
+ * child processes one by one. For background jobs, the main process just 
+ * execute in child process. For foreground jobs, the main process will wait
+ * for it. That means  a background job won't be executed until all previous 
+ * foreground jobs are done. You can try 'sleep 10; ls &' to prove this.
+ *
+ * The foreground jobs won't be zombie processes, because the main process 
+ * will wait for them. However, the background might become zombies. Therefore,
+ * the main process must call waitpid() at some place to clean the PCB of child
+ * processes.My approach is calling waitpid() to clean the job list every time
+ * after getting the user input. 
  *
  */
 
@@ -9,6 +29,7 @@
 
 /* use a linked list to store all jobs */
 job *job_head = NULL;
+
 
 process* add_process(process *proc_head, char *cmd) {
     process *new_proc, *p;
@@ -24,7 +45,8 @@ process* add_process(process *proc_head, char *cmd) {
     if (argc == 0)
         return proc_head;  
 #if DEBUG
-    printf("[debug] add process: %s, file in: %s, file out: %s, append mode: %d\n", new_proc->argv[0], file_in, file_out, append);
+    printf("[debug] add process: %s, file in: %s, file out: %s, append mode: %d\n", 
+            new_proc->argv[0], file_in, file_out, append);
 #endif
 
     /* set std in */
@@ -81,6 +103,10 @@ process* create_process_list(char *cmds) {
 }
 
 
+/*
+ * create a new job and add it to job list
+ *
+ */
 void add_new_job(char *command, int foreground) {
     job *new_job, *j;
 
@@ -119,7 +145,6 @@ void add_new_job(char *command, int foreground) {
 }
 
 
-
 void free_job(job *j) {
     process *p, *next;
     p = j->proc_head;
@@ -135,12 +160,17 @@ void free_job(job *j) {
 }
 
 
-int is_job_completed(job *j) {
+/*
+ * The status of job only depends on the status of 
+ * last process.
+ */
+int is_job_completed(job *j, int *status) {
     process *p;
     for (p = j->proc_head; p; p = p->next) {
         if (p->done != TRUE) {
             return FALSE;   
-        }   
+        }
+        *status = p->status;
     }
     return TRUE; 
 }
@@ -148,11 +178,19 @@ int is_job_completed(job *j) {
 
 void remove_completed_jobs() {
     job *j, *next;
+    int status;
+#if DEBUG
+    printf("[debug] remove completed jobs\n");
+#endif
     
     /* handle the fisrt job node */ 
     while (job_head) {
-        if (is_job_completed(job_head)) {
-            printf("[%d]  done   %s\n", job_head->id, job_head->command);
+        if (is_job_completed(job_head, &status)) {
+            if (status ==  0)
+                printf("[%d]   Done           %s\n", job_head->id, job_head->command);
+            else
+                printf("[%d]   Exit %d        %s\n", job_head->id, status, job_head->command);
+
             next = job_head->next;
             free_job(job_head);
             job_head = next;
@@ -166,8 +204,12 @@ void remove_completed_jobs() {
     /* handle job nodes except the first node */
     j = job_head;
     while (j->next) {
-        if (is_job_completed(j->next)) {
-            printf("[%d]  done   %s\n", j->next->id, j->next->command);
+        if (is_job_completed(j->next, &status)) {
+            if (status ==  0)
+                printf("[%d]   Done           %s\n", job_head->id, job_head->command);
+            else
+                printf("[%d]   Exit %d        %s\n", job_head->id, status, job_head->command);
+
             next = j->next;
             j->next = next->next;
             free_job(next);
@@ -193,7 +235,7 @@ void set_proc_done(pid_t pid, int status) {
     process *p;
 
 #if DEBUG
-    printf("[debug] process[%d] done: %d\n", pid, status);
+    printf("[debug] process[%d] exit status: %d\n", pid, status);
 #endif
 
     j = job_head;
@@ -210,6 +252,7 @@ void set_proc_done(pid_t pid, int status) {
     }
 }
 
+
 void update_job_status() {
     int status;
     pid_t pid;
@@ -223,9 +266,14 @@ void update_job_status() {
     }
 }
 
+
 void remove_job(job *j) {
     job *cur;
     
+#if DEBUG
+    printf("[debug] remove job[%d]: %s\n", j->id, j->command);
+#endif
+
     /* handle the fisrt job node */ 
     if (job_head->id == j->id) {
         job_head = j->next;
@@ -248,10 +296,18 @@ void remove_job(job *j) {
     }
 }
 
+/* 
+ * wait for the job untill all processes is done
+ *
+ */
 void wait_for_job(job *j) {
+#if DEBUG            
+            printf("[debug] wait for job[%d] %s\n", j->id, j->command);
+#endif
+    int status;
     do {
         update_job_status();
-    } while(!is_job_completed(j));
+    } while(!is_job_completed(j, &status));
     remove_job(j);
 }
 
@@ -332,7 +388,7 @@ void launch_job(job *j) {
             /* set the pid of child process */ 
             p->pid = pid;
 #if DEBUG
-    printf("[debug] launch proess[%d]: %s \n", p->pid, p->argv[0]);
+    printf("[debug] launch process[%d]: %s \n", p->pid, p->argv[0]);
 #endif
         }
 
@@ -368,6 +424,7 @@ void run_jobs() {
     }
 }
 
+
 int are_all_jobs_done() {
     if (job_head == NULL)
         return TRUE;
@@ -375,13 +432,16 @@ int are_all_jobs_done() {
         return FALSE;
 }
 
+
 void print_jobs() {
     job *j;
     for(j = job_head; j; j = j->next) {
-        printf("[%d]  Running     %s\n", j->id, j->command); 
+        printf("[%d]  Running         %s\n", j->id, j->command); 
     }
 }
 
+
+/* for unit test */
 /*
 int main() {
 

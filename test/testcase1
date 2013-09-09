@@ -1,0 +1,15 @@
+$ myshell
+myshell: pwd
+/your/source/directory
+myshell: cat < f1
+this is a test
+Hoosiers win championship
+^D
+myshell: cat f1 | sort
+Hoosiers win championship
+this is a test
+myshell: sort < f1 | head -1 | cat -n
+ 1 Hoosiers win championship
+myshell: exit
+$
+

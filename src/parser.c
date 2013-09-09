@@ -1,3 +1,12 @@
+/*
+ * P536-myshell
+ * Author: Tanghong Qiu
+ * File: parser.c 
+ * user input parsing routines
+ *
+ */
+
+
 #include "parser.h"
 
 char* strip(char* str) {
