@@ -14,7 +14,7 @@
 
 #define TRUE 1
 #define FALSE 0
-#define DEBUG 1 
+#define DEBUG 0 
 #define MAX_BUF_SIZE 256
 
 void change_dir(char** argv);

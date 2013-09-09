@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
         } else {
             /* exit if ctrl + d */
             printf("\n");
+            free_job_list();
             break;
         }
 
@@ -62,11 +63,17 @@ int main(int argc, char **argv) {
     
 
         if (strcmp(input, "exit") == 0) {
+            /* we don't have to wait child processes, and 
+             * those processes will be orphan processes. 
+             * Just a friendly remind
+             */
             if (are_all_jobs_done())
                 break;
-            else
+            else {
                 printf("There are running jobs.\n");
+                printf("Ctrl + d to force exit\n");
                 continue;
+            }
         } else if (strcmp(input, "jobs") == 0) {
             print_jobs();
             continue;

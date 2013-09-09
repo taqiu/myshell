@@ -17,4 +17,5 @@
 *.app
 
 # output files
-out
+obj
+bin

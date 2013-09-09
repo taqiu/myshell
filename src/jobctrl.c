@@ -358,14 +358,6 @@ void launch_job(job *j) {
     p = j->proc_head;
     file_in = STDIN_FILENO;
     while(p) {
-        /* change directory */
-        if (strcmp(p->argv[0], "cd") == 0) {
-            change_dir(p->argv);
-            p->done = TRUE;
-            p = p->next;
-            continue;
-         }    
-
         /* set pipes */
         if (p->next) {
             if (pipe(fd) < 0) {
@@ -375,21 +367,27 @@ void launch_job(job *j) {
             file_out = fd[1];
         } else
             file_out = STDOUT_FILENO;
-    
-        /* execute in child processes */
-        pid = fork();
-        if (pid < 0 ) {
-            perror("can't create child proccess");
-            exit(1);
-        } else if (pid == 0) {
-            /* launch a child process */
-            launch_process(p, file_in, file_out);
-        } else {
-            /* set the pid of child process */ 
-            p->pid = pid;
+   
+        /* change directory */
+        if (strcmp(p->argv[0], "cd") == 0) {
+            change_dir(p->argv);
+            p->done = TRUE;
+        } else {   
+            /* execute in child processes */
+            pid = fork();
+            if (pid < 0 ) {
+                perror("can't create child proccess");
+                exit(1);
+            } else if (pid == 0) {
+                /* launch a child process */
+                launch_process(p, file_in, file_out);
+            } else {
+                /* set the pid of child process */ 
+                p->pid = pid;
 #if DEBUG
-    printf("[debug] launch process[%d]: %s \n", p->pid, p->argv[0]);
+                printf("[debug] launch process[%d]: %s \n", p->pid, p->argv[0]);
 #endif
+            }
         }
 
         /* close opening files in main process */

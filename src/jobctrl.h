@@ -34,5 +34,6 @@ void add_new_job(char* cmd, int foreground);
 void run_jobs();
 int are_all_jobs_done();
 void print_jobs();
+void free_job_list();
 
 #endif
