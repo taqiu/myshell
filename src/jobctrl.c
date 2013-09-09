@@ -3,109 +3,12 @@
  * File: jobctrl.c 
  * job control routines
  *
- *
- * For each command (e.g. ls | sort; [foreground]  sleep 20 & [backrgound]),
- *  a job is created to hold 
- *
- *
- *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-
-#define TRUE 1
-#define FALSE 0
-#define DEBUG 1
-#define MAX_ARGC 32
-
-/* a running process for a command */
-typedef struct process {
-    struct process *next;
-    pid_t pid;             /* process id */ 
-    char *argv[MAX_ARGC];  /* command argv */
-    int std_in;            /* standard in */
-    int std_out;           /* standard out */
-    int done;              /* TRUE if the execution is done */
-    int status;            /* status of waitpid() */
-} process;
-
-/* a shell job which contains a set of process */
-typedef struct job {
-    struct job *next;
-    int id;                /* job id */
-    int bg_id;             /* only use for background jobs */
-    char* command;         /* job command */
-    char* cmds;            /* store cmds for process */
-    int started;           /* TRUE if the job is started */
-    int foreground;        /* TRUE if the job is foregournd */
-    process *proc_head;    /* process list */
-} job;
+#include "jobctrl.h"
 
 /* use a linked list to store all jobs */
 job *job_head = NULL;
-
-int parse_cmd(char *cmd, char **argv, char **file_in, char **file_out, int *append) {
-    /* parse argv */
-    int argc = 0;
-    int mode = 0; /* 0:argv  1: file in mode  2:file out mode */
-     
-    *file_in = NULL;
-    *file_out = NULL;
-    *append   = FALSE;
-
-    while (TRUE) {
-        /* fill all space and tab with '\0' */
-        while (*cmd == ' ' || *cmd == '\t')
-            *cmd++ = '\0';
-        /* break if reach the end of string */
-        if (*cmd == '\0')
-            break;
-
-        /* set parse mode */
-        if (*cmd == '<') {
-            mode = 1; /* file in mode */
-            *cmd++ = '\0';
-            continue;
-        }
-        if (*cmd == '>') {
-            mode = 2; /* file out mode */
-            *cmd++ = '\0';
-            if (*cmd++ == '>') {
-                *append = TRUE;
-                *cmd++ = '\0';
-            } else {
-                *append = FALSE;
-            }
-            continue;
-        }
-
-        if (mode == 1)
-            *file_in = cmd;
-        else if (mode == 2) {
-            *file_out = cmd;
-        } else {            
-            *argv++ = cmd;
-            argc++;
-        } 
-
-        /* move to next argument */
-        while (*cmd != ' ' && *cmd != '\t' && *cmd != '\0'
-                && *cmd != '<' && *cmd != '>')
-            cmd++;
-    }
-    *argv = '\0';
-
-    return argc;
-}
-
 
 process* add_process(process *proc_head, char *cmd) {
     process *new_proc, *p;
@@ -333,7 +236,7 @@ void remove_job(job *j) {
     /* handle job nodes except the first node */
     cur = job_head;
     while (cur->next) {
-        if (cur->next->id = j->id) {
+        if (cur->next->id == j->id) {
 #if DEBUG            
             printf("[debug] remove job[%d] %s\n", j->id, j->command);
 #endif
@@ -350,7 +253,6 @@ void wait_for_job(job *j) {
         update_job_status();
     } while(!is_job_completed(j));
     remove_job(j);
-    print_job_list();
 }
 
 
@@ -400,6 +302,14 @@ void launch_job(job *j) {
     p = j->proc_head;
     file_in = STDIN_FILENO;
     while(p) {
+        /* change directory */
+        if (strcmp(p->argv[0], "cd") == 0) {
+            change_dir(p->argv);
+            p->done = TRUE;
+            p = p->next;
+            continue;
+         }    
+
         /* set pipes */
         if (p->next) {
             if (pipe(fd) < 0) {
@@ -463,21 +373,14 @@ int are_all_jobs_done() {
         return FALSE;
 }
 
-void print_job_list() {
-    printf("==============   job list   ===================\n");
+void print_jobs() {
     job *j;
-    process *p;
     for(j = job_head; j; j = j->next) {
-        printf("job [%d], cmd: %s, start: %d \n", j->id, j->command, j->started); 
-        for (p = j->proc_head; p ; p= p->next) {
-            printf("proc %s, stdin: %d, stdout: %d, done: %d\n", p->argv[0], p->std_in, p->std_out, p->done);
-        }
-        printf("---\n"); 
+        printf("[%d]  Running     %s\n", j->id, j->command); 
     }
-    printf("==============  job list end ===================\n");
 }
 
-
+/*
 int main() {
 
     add_new_job("ls | sort >> 1123", TRUE);
@@ -487,7 +390,6 @@ int main() {
 
     run_jobs();
 
-    /* wait for background job */
     while(TRUE) {
 
         if (are_all_jobs_done()) {
@@ -498,5 +400,6 @@ int main() {
     }        
     free_job_list(); 
 }
+*/
 
 
