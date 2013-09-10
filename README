@@ -1,13 +1,5 @@
 P536-myshell
 ============
-!IMPORTANT: The background job id of this shell is slightly 
-different from bash.The Job id will be assign to both foreground
-and background jobs. Therefore, when you type 'jobs' to 
-check background jobs, the id can be [2] if a foreground job is 
-executed before it. This is not a mistake.
-
-
-============
 Simple shell for P536 Operating System.
 All below requirements are completed. 
 

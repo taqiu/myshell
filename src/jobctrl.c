@@ -111,6 +111,7 @@ process* create_process_list(char *cmds) {
  */
 void add_new_job(char *command, int foreground) {
     job *new_job, *j;
+    int last_bgid = 0;
 
 #if DEBUG
     printf("[debug] add job: \" %s \" \n", command);
@@ -133,11 +134,21 @@ void add_new_job(char *command, int foreground) {
     if (job_head == NULL) {
         job_head = new_job;
         job_head->id = 1;
+        if (foreground) 
+            job_head->bgid = 0;
+        else
+            job_head->bgid = 1;
     } else {
         j = job_head;
         while (j) {
+            if (j->bgid != 0)
+                last_bgid = j->bgid;
             if (j->next == NULL) {
                 new_job->id = j->id + 1;
+                if (foreground) 
+                    new_job->bgid = 0;
+                else 
+                    new_job->bgid = last_bgid + 1;
                 j->next = new_job;
                 break;
             }
@@ -189,9 +200,9 @@ void remove_completed_jobs() {
     while (job_head) {
         if (is_job_completed(job_head, &status)) {
             if (status ==  0)
-                printf("[%d]   Done           %s\n", job_head->id, job_head->command);
+                printf("[%d]   Done           %s\n", job_head->bgid, job_head->command);
             else
-                printf("[%d]   Exit %d        %s\n", job_head->id, status, job_head->command);
+                printf("[%d]   Exit %d        %s\n", job_head->bgid, status, job_head->command);
 
             next = job_head->next;
             free_job(job_head);
@@ -208,9 +219,9 @@ void remove_completed_jobs() {
     while (j->next) {
         if (is_job_completed(j->next, &status)) {
             if (status ==  0)
-                printf("[%d]   Done           %s\n", j->next->id, j->next->command);
+                printf("[%d]   Done           %s\n", j->next->bgid, j->next->command);
             else
-                printf("[%d]   Exit %d        %s\n", j->next->id, status, j->next->command);
+                printf("[%d]   Exit %d        %s\n", j->next->bgid, status, j->next->command);
 
             next = j->next;
             j->next = next->next;
@@ -438,7 +449,7 @@ int are_all_jobs_done() {
 void print_jobs() {
     job *j;
     for(j = job_head; j; j = j->next) {
-        printf("[%d]  Running         %s\n", j->id, j->command); 
+        printf("[%d]  Running         %s\n", j->bgid, j->command); 
     }
 }
 

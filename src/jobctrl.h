@@ -21,6 +21,7 @@ typedef struct process {
 typedef struct job {
     struct job *next;
     int id;                /* job id */
+    int bgid;              /* background job id (foreground job = 0) */
     char* command;         /* job command */
     char* cmds;            /* store cmds for process */
     int started;           /* TRUE if the job is started */
