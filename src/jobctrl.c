@@ -136,7 +136,7 @@ void add_new_job(char *command, int foreground) {
         job_head->id = 1;
         if (foreground) 
             job_head->bgid = 0;
-        else
+        else 
             job_head->bgid = 1;
     } else {
         j = job_head;
@@ -419,7 +419,8 @@ void launch_job(job *j) {
 
     if (j->foreground) {
         wait_for_job(j);
-    }
+    } else 
+        printf("[%d]  %s\n", j->bgid, j->command);
 }
 
     
