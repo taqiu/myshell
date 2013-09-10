@@ -20,8 +20,10 @@
  * The foreground jobs won't be zombie processes, because the main process 
  * will wait for them. However, the background might become zombies. Therefore,
  * the main process must call waitpid() at some place to clean the PCB of child
- * processes.My approach is calling waitpid() to clean the job list every time
- * after getting the user input. 
+ * processes. 
+ *
+ * For foreground jobs, the waitpid() is called in a loop until all jobs are
+ * done. FOr backfgound jobs, the waitpid() is triggered by the SIGCHLD signal.
  *
  */
 
