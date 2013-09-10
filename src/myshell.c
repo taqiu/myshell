@@ -25,14 +25,32 @@ void change_dir(char** argv) {
     }
 }
 
+
 void type_prompt() {
     printf("%s", prompt);
 }
+
+
+void sigchld_handler(int s) {
+    /* update job status and clean zombie processes */
+    update_job_status();
+}
+
 
 int main(int argc, char **argv) {
     char buf[MAX_BUF_SIZE];
     int foreground;
     char *token, *input;
+    struct sigaction sa;
+
+    /* use sigaction instead of signal (signal is out of date)*/
+    sa.sa_handler = sigchld_handler; /* reap all dead processes */
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+        perror("sigaction");
+        exit(1);
+    }
 
 
     /* set prompt if specified */
@@ -58,7 +76,6 @@ int main(int argc, char **argv) {
         printf("[debug] input: %s\n", input);
 #endif
 
-        update_job_status();
         remove_completed_jobs();
     
 
@@ -92,3 +109,4 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
