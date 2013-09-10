@@ -36,14 +36,16 @@
 char* strip(char* str) {
     char *end;
 
-    while (*str == ' ') str++;
+    while (*str == ' ' || *str == '\t') str++;
     if (*str == '\n') {
         *str = '\0';     
         return str;
     }
   
     end = str + strlen(str) - 1;
-    while(end > str && (*end == ' ' || *end == '\n')) end--;
+    while(end > str && 
+        (*end == ' ' || *end == '\t'
+         || *end == '\n')) end--;
     *(end+1) = '\0';
     return str;
 }
