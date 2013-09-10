@@ -14,7 +14,7 @@ TARGET = myshell
 
 CC       = gcc
 # compiling flags here
-CFLAGS   = -I. -Wall #-std=c99
+CFLAGS   =  -I. -Wall #-std=c99
 
 LINKER   = gcc -o
 # linking flags here

@@ -339,10 +339,12 @@ void launch_process(process *p, int file_in, int file_out) {
         close(file_out);
     }
 
-    if (execvp(p->argv[0], p->argv) < 0) {
-        fprintf(stderr, "exec \'%s\': %s\n", p->argv[0], strerror(errno));
-        exit(1);
-    }
+    execvp(p->argv[0], p->argv); 
+    /* return not expected. Must be an execvp() error */
+    fprintf(stderr, "exec \'%s\': %s\n", p->argv[0], strerror(errno));
+    /* free resource before exit ( not nessesary just a good manner */
+    free_job_list();
+    exit(1);
 }
 
 
