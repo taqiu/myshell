@@ -2,9 +2,33 @@
  * P536-myshell
  * Author: Tanghong Qiu
  * File: parser.c 
- * user input parsing routines
+ * User input parsing routines
  *
- */
+ * The user input will be parsed as below rules:  
+ *
+ * input       ::= commands
+ *
+ * commands    ::= command ; commands
+ *             |   command & commands 
+ *             |   command
+ *
+ * command     ::= argv redirection
+ *             |   argv
+ * 
+ * argv        ::=  argv[0] argv[1] ....
+ *
+ * redirection ::= infile outfile
+ *             |   outfile infile
+ *             |   infile
+ *             |   outfile
+ *
+ * infile      ::=  < file_name
+ *
+ * outfile     ::=  > file_name
+ *             |   >> file_name
+ *
+ * 
+ */ 
 
 
 #include "parser.h"
