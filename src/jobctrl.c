@@ -64,9 +64,9 @@ process* add_process(process *proc_head, char *cmd) {
     /* set std out */
     if (file_out != NULL) {
         if (append)
-            new_proc->std_out = open(file_out, O_WRONLY | O_CREAT | O_APPEND, S_IREAD|S_IWRITE);
+            new_proc->std_out = open(file_out, O_WRONLY | O_CREAT | O_APPEND, 0664);
         else
-            new_proc->std_out = open(file_out, O_WRONLY | O_CREAT, S_IREAD|S_IWRITE);
+            new_proc->std_out = open(file_out, O_WRONLY | O_CREAT, 0664);
     } else {
         new_proc->std_out = STDOUT_FILENO;
     }
@@ -208,9 +208,9 @@ void remove_completed_jobs() {
     while (j->next) {
         if (is_job_completed(j->next, &status)) {
             if (status ==  0)
-                printf("[%d]   Done           %s\n", job_head->id, job_head->command);
+                printf("[%d]   Done           %s\n", j->next->id, j->next->command);
             else
-                printf("[%d]   Exit %d        %s\n", job_head->id, status, job_head->command);
+                printf("[%d]   Exit %d        %s\n", j->next->id, status, j->next->command);
 
             next = j->next;
             j->next = next->next;

@@ -10,7 +10,7 @@
 #include "jobctrl.h"
 #include "parser.h"
 
-char prompt[20] = "myshell:";
+char prompt[20] = "myshell: ";
 
 
 void change_dir(char** argv) {

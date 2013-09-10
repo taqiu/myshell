@@ -1,0 +1,21 @@
+[taqiu@localhost P536-myshell]$ bin/myshell 
+myshell: cd test
+myshell: sleep 5& cat f1 &
+myshell: this is a test
+Hoosiers win championship
+
+[2]   Done            cat f1 
+myshell: 
+[1]   Done           sleep 5
+myshell: sleep 5 & cat f4 & cat f2 & sleep 4&
+myshell:      1	Hoosiers win championship
+     2	this is a test
+
+Hoosiers win championship
+cat: f4: No such file or directory
+
+[1]   Done           sleep 5 
+[2]   Exit 256         cat f4 
+[3]   Done            cat f2 
+[4]   Done            sleep 4
+

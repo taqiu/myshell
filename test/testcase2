@@ -1,0 +1,73 @@
+[taqiu@localhost P536-myshell]$ bin/myshell 
+myshell:ls
+bin  makefile  obj  README  src  test
+myshell:cd test
+myshell:cd nonexistent
+cd 'nonexistent': No such file or directory
+myshell:pwd  
+/home/taqiu/workspace/P536-myshell/test
+myshell:ls
+f1  f2	f3  testcase1
+myshell:cat f1
+this is a test
+Hoosiers win championship
+myshell:cat < f1
+this is a test
+Hoosiers win championship
+myshell:cat nonexistent
+cat: nonexistent: No such file or directory
+myshell:cat < nonexistent
+can't access 'nonexistent': No such file or directory
+myshell:nosuchcmd
+exec 'nosuchcmd': No such file or directory
+myshell:cat f1 | sort
+Hoosiers win championship
+this is a test
+myshell:cat f1 | sort | sort | sort | head -1
+Hoosiers win championship
+myshell:cat < f1 | sort | head -1 | cat -n
+     1	Hoosiers win championship
+myshell:cat < f1; cat f1; cat f1 | sort ; cat f1 | head -1
+this is a test
+Hoosiers win championship
+this is a test
+Hoosiers win championship
+Hoosiers win championship
+this is a test
+this is a test
+myshell:nocmd | sort | sort
+exec 'nocmd': No such file or directory
+myshell:cat f1 | noncmd   
+exec 'noncmd': No such file or directory
+myshell:ls -la 
+total 24
+drwxrwxr-x. 2 taqiu taqiu 4096 Sep  9 20:33 .
+drwxr-xr-x. 7 taqiu taqiu 4096 Sep  9 21:38 ..
+-rw-rw-r--. 1 taqiu taqiu   41 Sep  9 12:42 f1
+-rwxr--r--. 1 taqiu taqiu   82 Sep  9 15:29 f2
+-rw-------. 1 taqiu taqiu   41 Sep  9 21:28 f3
+-rw-rw-r--. 1 taqiu taqiu  256 Sep  9 12:57 testcase1
+myshell:chmod 444 f3
+myshell:ls -la
+total 24
+drwxrwxr-x. 2 taqiu taqiu 4096 Sep  9 20:33 .
+drwxr-xr-x. 7 taqiu taqiu 4096 Sep  9 21:38 ..
+-rw-rw-r--. 1 taqiu taqiu   41 Sep  9 12:42 f1
+-rwxr--r--. 1 taqiu taqiu   82 Sep  9 15:29 f2
+-r--r--r--. 1 taqiu taqiu   41 Sep  9 21:28 f3
+-rw-rw-r--. 1 taqiu taqiu  256 Sep  9 12:57 testcase1
+myshell:cat < f1 > f3
+can't access 'f3': Permission denied
+myshell:cat f1 >> f3
+can't access 'f3': Permission denied
+myshell:cat f1 > f2
+myshell:cat f2
+this is a test
+Hoosiers win championship
+myshell:cat f1 >> f2
+myshell:cat f2
+this is a test
+Hoosiers win championship
+this is a test
+Hoosiers win championship
+

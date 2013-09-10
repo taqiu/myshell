@@ -1,0 +1,35 @@
+[taqiu@localhost P536-myshell]$ bin/myshell 
+myshell: cd test 
+myshell: ls
+f1  f2	f3  testcase1  testcase2  testcase2~
+myshell: sleep 6 & ls; 
+f1  f2	f3  testcase1  testcase2  testcase2~
+myshell: jobs
+[1]   Done           sleep 6 
+myshell: jobs
+myshell: sleep 30&
+myshell: jobs
+[1]  Running         sleep 30
+myshell: 
+myshell: jobs
+[1]  Running         sleep 30
+myshell: 
+[1]   Done           sleep 30
+myshell: cat f1 | sort | head -2 | cat -n > j2 &
+myshell: jobs
+[1]   Done           cat f1 | sort | head -2 | cat -n > j2 
+myshell: cat j2
+     1	Hoosiers win championship
+     2	this is a test
+myshell: sleep 5 ; cat f1 | sort | cat -n > f2 & ls; ls
+f1  f2	f3  j2	testcase1  testcase2  testcase2~
+f1  f2	f3  j2	testcase1  testcase2  testcase2~
+myshell: 
+[2]   Done            cat f1 | sort | cat -n > f2 
+myshell: ls
+f1  f2	f3  j2	testcase1  testcase2  testcase2~
+myshell: rm testcase2~
+myshell: ls
+f1  f2	f3  j2	testcase1  testcase2
+myshell: pwd
+/home/taqiu/workspace/P536-myshell/test

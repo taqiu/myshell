@@ -1,0 +1,14 @@
+[taqiu@localhost P536-myshell]$ bin/myshell 
+myshell: sleep 10 &
+myshell: exit
+There are running jobs.
+Ctrl + d to force exit
+myshell: exit
+There are running jobs.
+Ctrl + d to force exit
+myshell: exit
+[1]   Done           sleep 10 
+[taqiu@localhost P536-myshell]$ ps
+  PID TTY          TIME CMD
+ 2944 pts/0    00:00:00 bash
+ 4654 pts/0    00:00:00 ps
