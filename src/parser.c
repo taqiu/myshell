@@ -1,6 +1,6 @@
 /*
  * P536-myshell
- * Author: Tanghong Qiu
+ * Author: Tanghong Qiu  Tianhao Cao
  * File: parser.c 
  * User input parsing routines
  *

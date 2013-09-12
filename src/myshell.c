@@ -1,7 +1,8 @@
 /*
  * P536 simple shell
- * Author: Tanghong Qiu
+ * Author: Tanghong Qiu Tianhao Cao
  * E-mail: taqiu@indiana.edu
+ *         caotia@indiana.edu
  * File: myshell.c
  *
  */

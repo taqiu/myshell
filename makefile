@@ -1,7 +1,8 @@
 ##############################
 # makefile for 'myshell'
-# author: Tanghong Qiu
+# author: Tanghong Qiu Tianhao Cao
 # e-mail: taqiu@indiana.edu
+# 	      caotia@indiana.edu
 # 
 # ###########################
 # Directories
